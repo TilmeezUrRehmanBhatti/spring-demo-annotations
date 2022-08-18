@@ -47,3 +47,13 @@ Coach theCoach = context.getBean("thatSillyCoach", Coach.class);
 ```
 
 + `"thatSillyCoach"` is bean id which is define in step 2 at @Component
+
+## Default Component Names - Overview
+
+**Spring also support Default Bean IDs**
++ Default bean id: the class name, **make first letter lower-case**
+
+<img src="https://user-images.githubusercontent.com/80107049/185380253-4ac91afe-35a5-4dd4-b26c-86d9e38c553e.png"   width=500/>
+
+**Code Example**
+<img src="https://user-images.githubusercontent.com/80107049/185380304-449a3fbe-a26d-4a49-9a4a-c4d43c63568b.png" width=500/>
