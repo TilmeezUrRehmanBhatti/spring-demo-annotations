@@ -216,3 +216,31 @@ public class TennisCoach implements Coach {
   ...
 }
 ```
+### Field Injection
+
+<center><span style="color:blue"  align=center>Inject dependencies by setting field values on class directly <br/> (even private field) </span></center>
+<center><span style="color:red"  align=center>Accomplished by using Java Reflection </span></center>
+
+**Development Process - Filed Injection**
+1. Configure the dependency injection with Autowired Annotation
+  * Applied directly to the field
+  * No need for setter method
+
+*Step 1:Configure the dependency injection with Autowired Annotation*
+File:TennisCOach.java
+```JAVA
+public class TennisCoach implements Coach {
+  
+  @Autowired
+  private FortuneService fortuneService;
+  
+  public TennisCoach() {
+  }
+  
+  // no need for setter method 
+  ...
+}
+```
+
+**Which Injection Type Should You Use?**    
+🔴IMPORTANT❗**Choose a style** Stay consistent in your project from one of Spring injection type because we will get the same functionality across the board.
