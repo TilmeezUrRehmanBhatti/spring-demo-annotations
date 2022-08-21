@@ -149,3 +149,70 @@ public class TennisCoach implements Coach {
 ```
 + Spring will scan all the @Component and find a bean that implement FortuneService in our case is HappyFortuneService 
 
+### Setter Injection
+
+Inject dependencies by calling setter method(s) on class
+
+**Development Process - Setter Method**
+1. Create setter method(s) in your class for injections
+2. Configure the dependency injection with @Autowired Annotation
+
+*Step 1:Creating setter method(s) in your class for injection*
+File:TennisCoach.java
+```JAVA
+@Component 
+public class TennisCoach implements Coach {
+  
+  private FortuneService fortuneService;
+  
+  public TennisCoach() {
+  }
+  
+  public void setFortuneSerivce(FortuneService fortuneService){
+    this.fortuneService = fortuneService;
+  }
+  ...
+}
+```
+
+*Step 2:Configure the dependency injection with Autowired Annotation*
+
+File:TennisCoach.java
+```JAVA
+@Component 
+public class TennisCoach implements Coach {
+  
+  private FortuneService fortuneService;
+  
+  public TennisCoach() {
+  }
+  
+  @Autowired
+  public void setFortuneSerivce(FortuneService fortuneService){
+    this.fortuneService = fortuneService;
+  }
+  ...
+}
+```
+
+> Injection dependencies by calling ANY method on class *Simply by: `@Autowired`*
+
+*Step 2:Configure the dependency injection with Autowired Annotation*
+
+File:TennisCoach.java
+```JAVA
+@Component 
+public class TennisCoach implements Coach {
+  
+  private FortuneService fortuneService;
+  
+  public TennisCoach() {
+  }
+  
+  @Autowired
+  public void doSomeCrazyStuff(FortuneService fortuneService){
+    this.fortuneService = fortuneService;
+  }
+  ...
+}
+```
