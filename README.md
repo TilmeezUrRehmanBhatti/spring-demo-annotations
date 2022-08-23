@@ -244,3 +244,193 @@ public class TennisCoach implements Coach {
 
 **Which Injection Type Should You Use?**    
 🔴IMPORTANT❗**Choose a style** Stay consistent in your project from one of Spring injection type because we will get the same functionality across the board.
+
+## Qualifiers for Dependency Injection - Overview
+The *@Autowired* annotation is a great way of making the need to inject a dependency in Spring explicit. Although it's useful, there are use cases for which this annotation alone isn't enough for Spring to understand which bean to inject.
+
+By default, Spring resolves autowired entries by type.
+
+**If more than one bean of the same type is available in the container, the framework will throw *NoUniqueBeanDefinitionException****,* indicating that more than one bean is available for autowiring.
+
+By using the *@Qualifier *annotation, we can **eliminate the issue of which bean needs to be injected**.
+
+**Injection Types**
+
++ Can apply **@Qualifier** annotation to
+  + Constructor Injection
+  + Setter Injection method
+  + Field Injection
+
+**Annotations - Default Bean Names ... and the Special Case**
+
+In general, when using Annotations, for the default bean name, Spring uses the following rule.
+
+*If the annotation's value doesn't indicate a bean name, an appropriate name will be built based on the short name of the class (with the first letter lower-cased).*
+
+For example:
+
+HappyFortuneService --> happyFortuneService
+
+\---
+
+However, for the **special case of when BOTH the first and second characters of the class name are upper case**, then the **name is NOT converted**.
+
+For the case of RESTFortuneService
+
+RESTFortuneService --> RESTFortuneService
+
+*No conversion* since the first two characters are upper case.
+
+Behind the scenes, Spring uses the **Java Beans Introspector** to generate the default bean name. Here's a screenshot of the documentation for the key method.
+
+![clipboard.png](inkdrop://file:D4vzxwCs0)
+
+Also, here's a link to the documentation.
+
+\- <https://docs.oracle.com/javase/8/docs/api/java/beans/Introspector.html#decapitalize(java.lang.String)>
+
+\---
+
+As always, you can specify a name for your bean.
+
+```JAVA
+@Component("foo")
+public class RESTFortuneService .... {
+    
+}
+```
+
+Then you can access it using the name of "foo".
+
+**Using @Qualifier with Constructors**
+
+**@Qualifier** is a nice feature, but it is tricky when used with Constructors.
+
+The syntax is much different from other examples and not exactly intuitive.  Consider this the "deep end of the pool" when it comes to Spring configuration LOL :-)
+
+\---
+
+```JAVA
+import org.springframework.beans.factory.annotation.Autowired;
+
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
+
+@Component
+public class TennisCoach implements Coach {
+
+    private FortuneService fortuneService;
+
+    // define a default constructor
+    public TennisCoach() {
+        System.out.println(">> TennisCoach: inside default constructor");
+    }
+    
+    @Autowired
+    public TennisCoach(@Qualifier("randomFortuneService") FortuneService theFortuneService) {
+
+        System.out.println(">> TennisCoach: inside constructor using @autowired and @qualifier");
+        
+        fortuneService = theFortuneService;
+    }
+       
+    
+    /*
+    @Autowired
+    public void doSomeCrazyStuff(FortuneService theFortuneService) {
+        System.out.println(">> TennisCoach: inside doSomeCrazyStuff() method");
+        fortuneService = theFortuneService;
+    }
+    */
+    
+    /*
+    @Autowired
+    public TennisCoach(FortuneService theFortuneService) {
+        fortuneService = theFortuneService;
+    }
+    */
+    
+    @Override
+    public String getDailyWorkout() {
+        return "Practice your backhand volley";
+    }
+
+    @Override
+    public String getDailyFortune() {
+        return fortuneService.getFortune();
+    }
+
+}
+```
+---
+For detailed documentation on using @Qualifier with Constructors, see this link in the Spring Reference Manual
+
+<https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#beans-autowired-annotation-qualifiers>
+
+
+
+====
+
+**@Qualifier with Setter Injection**
+
+You can use similar syntax with Setter Injection. You can use @Qualifier in method arguments line, such as
+```JAVA
+	@Autowired
+	public void setFortuneService(@Qualifier("randomFortuneService") FortuneService theFortuneService) {
+		System.out.println(">> TennisCoach: inside setFortuneService() method");
+		this.fortuneService = theFortuneService;
+	}
+```
+You can also use the @Qualifier above the method name. For example, here's the syntax
+
+```JAVA
+  @Autowired
+	@Qualifier("randomFortuneService")
+	public void setFortuneService(FortuneService theFortuneService) {
+		System.out.println(">> TennisCoach: inside setFortuneService() method");
+		this.fortuneService = theFortuneService;
+	}
+```
+**How to inject properties file using Java annotations**
+
+
+
+
+**Answer:**
+
+This solution will show you how inject values from a properties file using annotatons. The values will no longer be hard coded in the Java code.
+
+**1. Create a properties file to hold your properties. It will be a name value pair.  **
+
+New text file:  src/sport.properties
+
+```Properties
+foo.email=myeasycoach@gmail.com
+foo.team=Silly Java Coders
+```
+
+Note the location of the properties file is very important. It must be stored in src/sport.properties
+
+**2. Load the properties file in the XML config file.**
+
+File: applicationContext.xml
+
+Add the following lines:
+
+`  <context:property-placeholder location="classpath:sport.properties"/>  `
+
+This should appear just after the \<context:component-scan .../> line
+
+**3. Inject the properties values into your Swim Coach: SwimCoach.java**
+
+   
+
+```JAVA
+@Value("${foo.email}")
+private String email;
+    
+@Value("${foo.team}")
+private String team;
+```
+
+\---
