@@ -283,7 +283,7 @@ RESTFortuneService --> RESTFortuneService
 
 Behind the scenes, Spring uses the **Java Beans Introspector** to generate the default bean name. Here's a screenshot of the documentation for the key method.
 
-![clipboard.png](inkdrop://file:D4vzxwCs0)
+![image](https://user-images.githubusercontent.com/80107049/186266646-425c7f64-c8f5-4ce1-9372-c44be0f4ad49.png)
 
 Also, here's a link to the documentation.
 
