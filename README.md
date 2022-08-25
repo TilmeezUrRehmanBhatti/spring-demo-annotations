@@ -692,3 +692,243 @@ public class TennisCoach implements Coach, DisposableBean {
 3. In this app, AnnotationDemoApp.java is the main program. TennisCoach.java is the prototype scoped bean. TennisCoach implements the DisposableBean interface and provides the destroy() method. The custom bean processing is handled in the MyCustomBeanProcessor class.
 
 
+# Spring Configuration with Java Code (no XML)
+
+**Java Configuration**
++ Instead of configuration Spring container using XML
++ Configure the Spring container with Java code
+
+**3 Ways of configuration Spring container**
+1. Full XML Config
+```XML
+<bean id="myFortuneService"
+      class="com.tilmeez.springdemo.HappyFortuneService">
+</bean>
+
+<bean id="myCoach"
+      class="com.tilmeez.springdemo.BaseballCoach">
+  <constructor-arg ref="myFortuneService" />
+</bean>
+```
+2. XML Component Scan
+```XML
+<beans ...>
+    <context:component-scan base-package="com.tilmeez.springdemo" />
+</beans>
+```
+3. Java Configuration Class
+```JAVA
+@Configuration
+@ComponentScan("com.tilmeez.springdemo")
+public class SportConfig {
+  
+}
+```
+
+**Development Process**
+1. Create a Java class and annotate as @Configuration
+```JAVA
+@Configuration
+public class SportConfig {
+  
+}
+```
+its a empty configuration Without any beans
+
+2. Add component scanning support: @ComponentScan (optional)
+```JAVA
+@Configuration
+@ComponentScan("com.tilmeez.springdemo")
+public class SportConfig {
+  
+}
+```
+@ComponentScan will scan the Package which is given same as XML and register those with a spring container
+
+3. Read Spring Java configuration class
+```JAVA
+AnnotaionConfigApplicationContext context =
+  new AnnotationConfigApplicationContext(SportConfig.class);
+```
+`SportConfig` is Java Configuration class here
+
+4. Retrieve bean from Spring container
+```JAVA
+Coach theCoach = context.getBean("tennisCoach", Coach.class);
+```
+**Defining Spring Beans with Java Code (no xml) - Overview**
+
+**Development process**
+1. Define method to expose bean
+```JAVA
+@Configuration
+public class SportConfig {
+  
+  @Bean
+  public Coach swimCoach() {
+    SwimCoach mySwinCoach = new SwimCoach();
+    
+    return mySwimCoach;
+  }
+}
+```
++ Create instance of swimCoach and return it
++ The method name `swimCoach()` will be the "`bean id`"
++ No @ComponentScan
+  + Define each bean individually in this config class
+2. Inject bean dependencies
+```JAVA
+@Configuration
+public class SportConfig {
+  
+  @Bean
+  public FortuneService happyFortuneService(){
+    return new HappyFortuneService(); // instance of HappyFortuneService
+  }
+  
+  @Bean
+  public Coach swimCoach() {
+    SwimCoach mySwimCoach = new SwimCoach( happyFortuneService());
+    
+    return mySwimCoach;
+  }
+  
+}
+```
++ Create instance of HappyFortuneService and return it
++ The method `happyFortuneService` will be the "bean id"
+3. Read Spring Java configuration class
+```JAVA
+AnnotationConfigApplicaionContext context = 
+  new AnnotationConfigApplicationContext(SportConfig.class);
+```
+4. Retrieve bean from Spring container
+```JAVA
+Coach theCoach = context.getBean("swimCoach", Coach.class);
+```
++  `swimCoach` is bean id which is method name of bean id of @Bean annotation
+
+**How @Bean works behind the scenes**
+For this code:
+```JAVA
+  @Bean 
+  public Coach swimCoach() {   
+   SwimCoach mySwimCoach = new SwimCoach();   
+   return mySwimCoach; 
+  }
+```
+At a high-level, Spring creates a bean component manually. By default the scope is singleton. So any request for a "swimCoach" bean, will get the same instance of the bean since singleton is the default scope.
+
+`@Bean`   
+The @Bean annotation tells Spring that we are creating a bean component manually. We didn't specify a scope so the default scope is singleton.
+
+
+`public Coach swimCoach(){`  
+This specifies that the bean will bean id of "swimCoach". The method name determines the bean id. The return type is the Coach interface. This is useful for dependency injection. This can help Spring find any dependencies that implement the Coach interface.
+
+The @Bean annotation will intercept any requests for "swimCoach" bean. Since we didn't specify a scope, the bean scope is singleton. As a result, it will give the same instance of the bean for any requests.
+
+`SwimCoach mySwimCoach = new SwimCoach();`   
+This code will create a new instance of the SwimCoach.
+
+
+
+`return mySwimCoach;`   
+This code returns an instance of the swimCoach.
+
+
+It is important to note that this method has the @Bean annotation. The annotation will intercept ALL calls to the method "swimCoach()". Since no scope is specified the @Bean annotation uses singleton scope. Behind the scenes, during the @Bean interception, it will check in memory of the Spring container (applicationContext) and see if this given bean has already been created.
+
+If this is the first time the bean has been created then it will execute the method as normal. It will also register the bean in the application context. So that is knows that the bean has already been created before. Effectively setting a flag.
+
+The next time this method is called, the @Bean annotation will check in memory of the Spring container (applicationContext) and see if this given bean has already been created. Since the bean has already been created (previous paragraph) then it will immediately return the instance from memory. It will not execute the code inside of the method. Hence this is a singleton bean.
+
+The code for
+```JAVA
+ SwimCoach mySwimCoach = new SwimCoach(); 
+ return mySwimCoach;
+```
+is not executed for subsequent requests to the method public Coach swimCoach() . This code is only executed once during the initial bean creation since it is singleton scope.
+
+Now let's take it one step further.
+```JAVA
+return new SwimCoach(sadFortuneService())
+  ```
+The code is slightly different. It is injecting a dependency.
+
+In this example, we are creating a SwimCoach and injecting the sadFortuneService().
+
+```JAVA
+// define bean for our sad fortune service
+        @Bean
+        public FortuneService sadFortuneService() {
+            return new SadFortuneService();
+        }
+        
+        // define bean for our swim coach AND inject dependency
+        @Bean
+        public Coach swimCoach() {
+            SwimCoach mySwimCoach = new SwimCoach(sadFortuneService());
+            
+            return mySwimCoach;
+        }
+```
+Using the same information presented earlier
+
+The code
+```JAVA
+     // define bean for our sad fortune service
+        @Bean
+        public FortuneService sadFortuneService() {
+            return new SadFortuneService();
+        }
+```
+In the code above, we define a bean for the sad fortune service. Since the bean scope is not specified, it defaults to singleton.
+
+Any calls for sadFortuneService, the @Bean annotation intercepts the call and checks to see if an instance has been created. First time through, no instance is created so the code executes as desired. For subsequent calls, the singleton has been created so @Bean will immediately return with the singleton instance.
+
+```JAVA
+return new SwimCoach(sadFortuneService())
+  ```
+This code creates an instance of SwimCoach. Note the call to the method sadFortuneService(). We are calling the annotated method above. The @Bean will intercept and return a singleton instance of sadFortuneService. The sadFortuneService is then injected into the swim coach instance.
+
+
+
+This is effectively dependency injection. It is accomplished using all Java configuration (no xml).
+
+
+**Injecting Values from Properties File - Overview**
+
+1. Create Properties File
+   File:sport.prorperties
+```properties
+foo.email=myeasycaoch@gmail.com
+foo.team=Awesome Java Coders
+```
++ `foo.email` Property Name
++ `foo.team` Property Value
+2. Load Properties File in Spring config
+   File:SportConfig.java
+```JAVA
+@Configuration
+@PropertySource("classpath:sport.properties") // Load prop file 
+public class SportConfig {
+  
+}
+```
+3. Reference values from Properties File
+   File:SwimCoach.java
+```JAVA
+public class SwimCoach implements Coach {
+  
+  @Value("${foo.eamil}") //Field Injection
+  private String email;
+  
+  @Value("${foo.team}")
+  private String team;
+  
+  ...
+}
+```
+
+

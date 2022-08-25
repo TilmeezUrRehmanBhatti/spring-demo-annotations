@@ -15,7 +15,6 @@ public class TennisCoach implements Coach, DisposableBean {
 
     @Qualifier("fileFortuneService")
     @Autowired
-
     private FortuneService fortuneService;
 
     // define default constructor
