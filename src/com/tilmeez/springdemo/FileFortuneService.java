@@ -2,6 +2,7 @@ package com.tilmeez.springdemo;
 
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +18,12 @@ public class FileFortuneService implements FortuneService{
     private Random myRandom = new Random();
 
     public FileFortuneService() {
+        System.out.println(">> FileFortuneService: inside default constructor");
+    }
+
+    @PostConstruct
+    private void loadTheFortuneFile() {
+        System.out.println(">> FileFortuneService: inside method loadTheFortunesFile");
 
         File theFile = new File(fileName);
 

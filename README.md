@@ -423,8 +423,6 @@ This should appear just after the \<context:component-scan .../> line
 
 **3. Inject the properties values into your Swim Coach: SwimCoach.java**
 
-   
-
 ```JAVA
 @Value("${foo.email}")
 private String email;
@@ -434,3 +432,263 @@ private String team;
 ```
 
 \---
+
+# Spring Configuration with Java Annotations - Bean Scopes and Lifecycle Methods
+**Bean Scope**
++ Scope refers to lifecycle of a bean
++ How long does bean live?
++ How many instances are created?
++ How is the bean shared?
+
+**Default Scope**
+<center><span style="color:blue"  align=center>Default Scope is singleton </span></center>
+
++ Spring Container creates only one instance of the bean, by default
++ It is cached in memory
++ All request for the bean
+  + will return a **SHARED** reference to **SAME** bean
+
+
+<img src="https://user-images.githubusercontent.com/80107049/186634984-0888d759-6e5b-4656-aadb-1857a632571c.png" width=400 />
+
+**Explicitly Specify Bean Scope**
+```JAVA
+@Component
+@Scope("singleton")
+public class TennisCoach() implements Coach{
+ ... 
+}
+```
+
+**Prototype Scope Example**
+Prototype scope: new object for each request
+```JAVA
+@Component
+@Scope("prototype")
+public class TennisCoach() implements Coach{
+ ... 
+}
+```
+<img src="https://user-images.githubusercontent.com/80107049/186635143-4a4364e5-9e5a-4d67-98ca-d59974476177.png" width=600 />
+
+**Bean Lifecyle Methods/Hooks**
++ Can add custom code during **bean initialization**
+  + Calling custom business logic methods
+  + Setting up handles to resources(db, sockets, file etc)
+
+
++ Can add custom code during **bean destruction**
+  + Calling custom business logic method
+  + Clean up handles to resources(db, sockets, files etc)
+
+**Development Process**
+1. Define your methods for init and destroy
+2. Add annotations: @PostConstruct and @PreDestroy
+
+**Init: method configuration**
+```JAVA
+@Component
+public class TennisCoach implements Coach {
+  
+  @PostConstruct
+  public void doMyStartupStuff() { ... }
+  
+  ...
+    
+}
+``` 
+<center>
+Code will execute after constructor <br/>
+  <b>and</b><br/>
+after injection of dependencies
+</center>  
+
+**Destroy: method configuration**
+```JAVA
+@Component
+public class TennisCoach implements Coach {
+  
+  @PreDestroy
+  public void doMyCleanupStuff() { ... }
+  
+  ...
+    
+}
+``` 
+<center>
+  Code will execute <b>before</b> <br/>
+  bean is destroyed
+  </center>
+
+*Special Note about @PostConstruct and @PreDestroy Method Signatures*
+
+**Access modifier**
+
+The method can have any access modifier (public, protected, private)
+
+**Return type**
+
+The method can have any return type. However, "void' is most commonly used. If you give a return type just note that you will not be able to capture the return value. As a result, "void" is commonly used.
+
+**Method name**
+
+The method can have any method name.
+
+**Arguments**
+
+The method can not accept any arguments. The method should be no-arg.
+
+
+
+> If you are using Java 9 or higher, then you will encounter an error when using @PostConstruct and @PreDestroy in your code.
+***Solution***
+
+1\. Download the *javax.annotation-api-1.3.2.jar* from
+
+<https://search.maven.org/remotecontent?filepath=javax/annotation/javax.annotation-api/1.3.2/javax.annotation-api-1.3.2.jar>
+
+2\. Copy the JAR file to the **lib** folder of your project
+
+Use the following steps to add it to your Java Build Path.
+
+3\. Right-click your project, select **Properties**
+
+4\. On left-hand side, click **Java Build Path**
+
+5\. In top-center of dialog, click **Libraries**
+
+6\. Click **Classpath** and then Click **Add JARs ...**
+
+7\. Navigate to the JAR file **\<your-project>/lib/javax.annotation-api-1.3.2.jar**
+
+8\. Click **OK **then click **Apply and Close**
+
+
+\---
+
+***In contrast to the other scopes, Spring does not manage the complete lifecycle of a  
+prototype bean****: the container instantiates, configures, and otherwise assembles a  
+prototype object, and hands it to the client, with no further record of that prototype  
+instance.
+*
+
+*Thus, although initialization lifecycle callback methods are called on all objects regardless of scope, ****in the case of prototypes, configured destruction lifecycle callbacks are not called****. The client code must clean up prototype-scoped objects and release expensive resources that the prototype bean(s) are holding. *
+
+*To get the Spring container to release resources held by prototype-scoped beans, try using a custom *[*bean post-processor*](https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#beans-factory-extension-bpp)*, which holds a reference to beans that need to be cleaned up.
+*
+
+This also applies to XML configuration.
+
+\---
+
+***QUESTION: How can I create code to call the destroy method on prototype scope beans***
+
+
+
+
+***ANSWER:***
+
+You can destroy prototype beans but custom coding is required. This examples shows how to destroy prototype scoped beans.
+
+1. Create a custom bean processor. This bean processor will keep track of prototype scoped beans. During shutdown it will call the destroy() method on the prototype scoped beans.
+```JAVA
+package com.tilmeez.springdemo;
+
+public class MyCustomBeanProcessor implements BeanPostProcessor, BeanFactoryAware, DisposableBean {
+
+    private BeanFactory beanFactory;
+
+    private final List<Object> prototypeBeans = new LinkedList<>();
+
+    @Override
+    public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+
+        // after startup, keep track of prototype scoped beans.
+        // we will need to know who they are for later destruction
+
+        if (beanFactory.isPrototype(beanName)) {
+            synchronized (prototypeBeans) {
+                prototypeBeans.add(bean);
+            }
+        }
+        return bean;
+    }
+
+    @Override
+    public void setBeanFactory(BeanFactory beanFactory) throws  BeansException{
+        this.beanFactory = beanFactory;
+    }
+
+    @Override
+    public void destroy() throws Exception {
+
+        // loop through the prototype beans and call the destroy() method on each one
+        synchronized (prototypeBeans) {
+            for (Object bean : prototypeBeans) {
+                if (bean instanceof DisposableBean) {
+                    DisposableBean disposable = (DisposableBean) bean;
+                    try {
+                        disposable.destroy();
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        }
+        prototypeBeans.clear();
+
+    }
+
+}
+```
+2. The prototype scoped beans MUST implement the DisposableBean interface. This interface defines a "destroy()" method. This method should be used instead of the @PreDestroy annotation.
+
+```JAVA
+package com.tilmeez.springdemo;
+
+@Component
+@Scope("prototype")
+public class TennisCoach implements Coach, DisposableBean {
+
+    @Qualifier("randomFortuneService")
+    @Autowired
+
+    private FortuneService fortuneService;
+
+    // define default constructor
+
+    public TennisCoach() {
+        System.out.println(">> TennisCoach: Inside default constructor");
+    }
+
+    // define my ini method
+    @PostConstruct
+    public void doMyStartupStuff(){
+        System.out.println(">> TennisCoach: inside of doMyStartupStuff()");
+    }
+
+    // define my destroy method
+    @PreDestroy
+    public void doMyCleanupStuff(){
+        System.out.println(">> TennisCoach: inside of duMyCleanupStuff()");
+    }
+
+    @Override
+    public void destroy() throws Exception {
+        System.out.println(">> TennisCoach: inside destroy()");
+    }
+
+    @Override
+    public String getDailyWorkout() {
+        return "Practice your backhand volley";
+    }
+
+    @Override
+    public String getDailyFortune() {
+        return fortuneService.getFortune();
+    }
+}
+```
+3. In this app, AnnotationDemoApp.java is the main program. TennisCoach.java is the prototype scoped bean. TennisCoach implements the DisposableBean interface and provides the destroy() method. The custom bean processing is handled in the MyCustomBeanProcessor class.
+
+
