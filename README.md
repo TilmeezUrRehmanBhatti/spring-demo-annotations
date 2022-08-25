@@ -218,8 +218,9 @@ public class TennisCoach implements Coach {
 ```
 ### Field Injection
 
-<center><span style="color:blue"  align=center>Inject dependencies by setting field values on class directly <br/> (even private field) </span></center>
-<center><span style="color:red"  align=center>Accomplished by using Java Reflection </span></center>
+<center><p style="color:blue"  align="center">Inject dependencies by setting field values on class directly <br/> (even private field) </p></center>
+
+<center><p style="color:red"  align=center>Accomplished by using Java Reflection </p></center>
 
 **Development Process - Filed Injection**
 1. Configure the dependency injection with Autowired Annotation
@@ -441,7 +442,7 @@ private String team;
 + How is the bean shared?
 
 **Default Scope**
-<center><span style="color:blue"  align=center>Default Scope is singleton </span></center>
+<center><p style="color:blue"  align=center>Default Scope is singleton </p></center>
 
 + Spring Container creates only one instance of the bean, by default
 + It is cached in memory
